@@ -5,8 +5,6 @@ var http = require('http');
 var toString = Object.prototype.toString,
     push = Array.prototype.push;
 
-// var pathBase = '/commands/';
-
 var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
 var closureRegex = /^\{.*\}$/;
 
@@ -37,11 +35,11 @@ function isArray(o) {
 function qryMain(method, options, createNew){
     return function(){
         var self = this,
-            gremlin,
+            rest,
             args = isArray(arguments[0]) ? arguments[0] : arguments,
             appendArg = '';
 
-        gremlin = createNew ? new Gremlin(options) : self._buildGremlin(self.params);
+        rest = createNew ? new REST(options) : self._buildREST(self.params);
                  
         //cater for idx param 2
         if(method == 'idx' && args.length > 1){
@@ -52,9 +50,9 @@ function qryMain(method, options, createNew){
             appendArg = "[["+ appendArg + "]]";
             args.length = 1;
         }
-        gremlin.params += '.' + method + buildArgs.call(self, args);
-        gremlin.params += appendArg;
-        return gremlin;
+        rest.params += '.' + method + buildArgs.call(self, args);
+        rest.params += appendArg;
+        return rest;
     }
 }
 
@@ -80,9 +78,9 @@ function parseArgs(val) {
 //Do not pass in method name, just string arg
 function qryIndex(){
     return function(arg) {
-        var gremlin = this._buildGremlin(this.params);
-        gremlin.params += '['+ arg.toString() + ']';
-        return gremlin;
+        var rest = this._buildREST(this.params);
+        rest.params += '['+ arg.toString() + ']';
+        return rest;
     }
 }
 
@@ -90,48 +88,48 @@ function qryIndex(){
 function qryPipes(method){
     return function() {
         var self = this,
-            gremlin = self._buildGremlin(self.params),
+            rest = self._buildREST(self.params),
             args = [],
             isArray = isArray(arguments[0]),
             argsLen = isArray ? arguments[0].length : arguments.length;
 
-        gremlin.params += "." + method + "("
+        rest.params += "." + method + "("
         for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
-            gremlin.params += ",";
+            rest.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
+            rest.params += ",";
         }
-        gremlin.params = gremlin.params.slice(0, -1);
-        gremlin.params += ")";
-        return gremlin;
+        rest.params = rest.params.slice(0, -1);
+        rest.params += ")";
+        return rest;
     }
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
 function qryCollection(method){
     return function() {
-        var gremlin = this._buildGremlin(this.params),
+        var rest = this._buildREST(this.params),
             args = [];
 
-        gremlin.params += "." + method + "(["
+        rest.params += "." + method + "(["
         for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
-            gremlin.params += arguments[0][_i].params;
-            gremlin.params += ",";
+            rest.params += arguments[0][_i].params;
+            rest.params += ",";
         }
-        gremlin.params = gremlin.params.slice(0, -1);
-        gremlin.params += "])";
-        return gremlin;
+        rest.params = rest.params.slice(0, -1);
+        rest.params += "])";
+        return rest;
     }
 }
 
 function qrySql(options){
     return function(){
-        var gremlin,
+        var rest,
             args = arguments[0];
 
-        gremlin = new Gremlin(options, '/sql');
+        rest = new REST(options, '/sql');
 
-        gremlin.params = args;
-        return gremlin;
+        rest.params = args;
+        return rest;
     }
 }
 
@@ -154,10 +152,10 @@ function buildArgs(array) {
     return '(' + argList + ')' + append;
 }
 
-var Gremlin = (function () {
-    function Gremlin(options, urlPath) {
-        this.pathBase = '/commands/';
-        this.urlPath = urlPath || '/gremlin';
+var REST = (function () {
+    function REST(options, urlPath) {
+        this.pathBase = '/command/';
+        this.urlPath = urlPath || '/rest';
         this.OPTS = options;
         this.params = 'g';    
     }
@@ -173,22 +171,22 @@ var Gremlin = (function () {
         return function(success, error) {
             var baseUrl = this.pathBase + this.OPTS.graph,
                 data = this.params,           
-                auth = this.base_auth(this.OPTS.user, this.OPTS.password),
+                auth = basic_auth(this.OPTS.user, this.OPTS.password),
                 headers = {'Authorization': auth};
-            return postData(baseUrl + this.urlPath, data, headers).then(success, error);
+            return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
         } 
     }
 
-    function postData(urlPath, data, headers){
-        var self = this;
+    function postData(path, data, headers){
         var deferred = q.defer();
         var payload = data || '{}';
         var body = '';
+
         
         var options = {
             'host': this.OPTS.host,
             'port': this.OPTS.port,
-            'path': urlPath,
+            'path': path,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload, 'utf8')
@@ -222,8 +220,8 @@ var Gremlin = (function () {
         return deferred.promise;
     }
 
-    Gremlin.prototype = {
-        _buildGremlin: function (qryString){
+    REST.prototype = {
+        _buildREST: function (qryString){
             this.params = qryString;
             return this;
         },
@@ -305,7 +303,7 @@ var Gremlin = (function () {
         then: post(),
 
     }
-    return Gremlin;
+    return REST;
 })();
 
 var OrientDB = (function(){
@@ -313,7 +311,7 @@ var OrientDB = (function(){
     function OrientDB(options){
 
         //default options
-        var this.OPTS = {
+        this.OPTS = {
             'host': 'localhost',
             'port': 2480,
             'graph': 'tinkergraph',
@@ -321,6 +319,15 @@ var OrientDB = (function(){
             //'user': 'root',
             //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
         };
+
+        // this.OPTS = {
+        //     'host': 'localhost',
+        //     'port': 2480,
+        //     'graph': 'tinkerTest',
+        //     'idRegex': /^[0-9]+:[0-9]+$/,
+        //     'user': 'root',
+        //     'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
+        // };
     
         if(options){
             this.setOptions(options);
@@ -361,7 +368,7 @@ var OrientDB = (function(){
 
     }
 
-    gRex.prototype.setOptions = function (options){
+    OrientDB.prototype.setOptions = function (options){
         if(!!options){
             for (var k in options){
                 if(options.hasOwnProperty(k)){
@@ -371,7 +378,11 @@ var OrientDB = (function(){
         }
     }
 
-    gRex.prototype.begin = function (){
+    OrientDB.prototype.setAuth = function (user, password){
+        this.setOptions({ 'user': user, 'password': password });
+    }
+
+    OrientDB.prototype.begin = function (){
         return new Trxn(this.OPTS);
     }
 
