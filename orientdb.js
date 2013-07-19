@@ -35,11 +35,11 @@ function isArray(o) {
 function qryMain(method, options, createNew){
     return function(){
         var self = this,
-            rest,
+            restCmd,
             args = isArray(arguments[0]) ? arguments[0] : arguments,
             appendArg = '';
 
-        rest = createNew ? new REST(options) : self._buildREST(self.params);
+        restCmd = createNew ? new REST(options) : self._buildREST(self.params);
                  
         //cater for idx param 2
         if(method == 'idx' && args.length > 1){
@@ -50,9 +50,9 @@ function qryMain(method, options, createNew){
             appendArg = "[["+ appendArg + "]]";
             args.length = 1;
         }
-        rest.params += '.' + method + buildArgs.call(self, args);
-        rest.params += appendArg;
-        return rest;
+        restCmd.params += '.' + method + buildArgs.call(self, args);
+        restCmd.params += appendArg;
+        return restCmd;
     }
 }
 
@@ -78,9 +78,9 @@ function parseArgs(val) {
 //Do not pass in method name, just string arg
 function qryIndex(){
     return function(arg) {
-        var rest = this._buildREST(this.params);
-        rest.params += '['+ arg.toString() + ']';
-        return rest;
+        var restCmd = this._buildREST(this.params);
+        restCmd.params += '['+ arg.toString() + ']';
+        return restCmd;
     }
 }
 
@@ -88,48 +88,48 @@ function qryIndex(){
 function qryPipes(method){
     return function() {
         var self = this,
-            rest = self._buildREST(self.params),
+            restCmd = self._buildREST(self.params),
             args = [],
             isArray = isArray(arguments[0]),
             argsLen = isArray ? arguments[0].length : arguments.length;
 
-        rest.params += "." + method + "("
+        restCmd.params += "." + method + "("
         for (var _i = 0; _i < argsLen; _i++) {
-            rest.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
-            rest.params += ",";
+            restCmd.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
+            restCmd.params += ",";
         }
-        rest.params = rest.params.slice(0, -1);
-        rest.params += ")";
-        return rest;
+        restCmd.params = restCmd.params.slice(0, -1);
+        restCmd.params += ")";
+        return restCmd;
     }
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
 function qryCollection(method){
     return function() {
-        var rest = this._buildREST(this.params),
+        var restCmd = this._buildREST(this.params),
             args = [];
 
-        rest.params += "." + method + "(["
+        restCmd.params += "." + method + "(["
         for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
-            rest.params += arguments[0][_i].params;
-            rest.params += ",";
+            restCmd.params += arguments[0][_i].params;
+            restCmd.params += ",";
         }
-        rest.params = rest.params.slice(0, -1);
-        rest.params += "])";
-        return rest;
+        restCmd.params = restCmd.params.slice(0, -1);
+        restCmd.params += "])";
+        return restCmd;
     }
 }
 
 function qrySql(options){
     return function(){
-        var rest,
+        var restCmd,
             args = arguments[0];
 
-        rest = new REST(options, '/sql');
+        restCmd = new REST(options, '/sql');
 
-        rest.params = args;
-        return rest;
+        restCmd.params = args;
+        return restCmd;
     }
 }
 
@@ -155,7 +155,7 @@ function buildArgs(array) {
 var REST = (function () {
     function REST(options, urlPath) {
         this.pathBase = '/command/';
-        this.urlPath = urlPath || '/rest';
+        this.urlPath = urlPath || '/gremlin';
         this.OPTS = options;
         this.params = 'g';    
     }
@@ -319,6 +319,15 @@ var OrientDB = (function(){
             //'user': 'root',
             //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
         };
+
+        // this.OPTS = {
+        //     'host': 'localhost',
+        //     'port': 2480,
+        //     'graph': 'tinkerTest',
+        //     'idRegex': /^[0-9]+:[0-9]+$/,
+        //     'user': 'root',
+        //     'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
+        // };
     
         if(options){
             this.setOptions(options);
@@ -344,6 +353,14 @@ var OrientDB = (function(){
         this.getIndex =  qryMain('getIndex');
         this.dropIndex = qryMain('dropIndex');
         this.dropKeyIndex = qryMain('dropKeyIndex');
+
+        //CUD
+        // exports.addVertex = _cud('create', 'vertex');
+        // exports.addEdge = _cud('create', 'edge');
+        // exports.removeVertex = _cud('delete', 'vertex');
+        // exports.removeEdge = _cud('delete', 'edge');
+        // exports.updateVertex = _cud('update', 'vertex');
+        // exports.updateEdge = _cud('update', 'edge');
 
         this.clear =  qryMain('clear');
         this.shutdown =  qryMain('shutdown');
