@@ -1,0 +1,20 @@
+{
+  "name": "orientdb-js",
+  "description": "Javascript driver for OrientDB with a Blueprints/Gremlin like syntax.",
+  "version": "0.1.1",
+  "keywords": ["database", "graph", "orientdb", "orient", "gremlin", "blueprints"],
+  "homepage": "https://github.com/entrendipity/grex",
+  "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orientechnologies/orientdb-js"
+  },
+  "dependencies": {
+    "q": "0.9.x"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "main": "index.js"
+}

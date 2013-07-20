@@ -319,15 +319,6 @@ var OrientDB = (function(){
             //'user': 'root',
             //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
         };
-
-        // this.OPTS = {
-        //     'host': 'localhost',
-        //     'port': 2480,
-        //     'graph': 'tinkerTest',
-        //     'idRegex': /^[0-9]+:[0-9]+$/,
-        //     'user': 'root',
-        //     'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
-        // };
     
         if(options){
             this.setOptions(options);
@@ -353,14 +344,6 @@ var OrientDB = (function(){
         this.getIndex =  qryMain('getIndex');
         this.dropIndex = qryMain('dropIndex');
         this.dropKeyIndex = qryMain('dropKeyIndex');
-
-        //CUD
-        // exports.addVertex = _cud('create', 'vertex');
-        // exports.addEdge = _cud('create', 'edge');
-        // exports.removeVertex = _cud('delete', 'vertex');
-        // exports.removeEdge = _cud('delete', 'edge');
-        // exports.updateVertex = _cud('update', 'vertex');
-        // exports.updateEdge = _cud('update', 'edge');
 
         this.clear =  qryMain('clear');
         this.shutdown =  qryMain('shutdown');
