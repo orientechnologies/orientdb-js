@@ -415,17 +415,8 @@
     }
     // check for `exports` after `define` in case a build optimizer adds an `exports` object
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-
-        //Node.js
-        exports.inject = function(Q, HTTP, nodeFunc){
-            q = Q;
-            http = HTTP;
-            REST.prototype.then = nodeFunc.post;
-
-            delete exports.inject;
-            exports.connect = orientdb;
-            return exports;
-        };
+        exports.POST = REST.prototype;
+        exports.connect = orientdb;
     }
     else {
         //browser
