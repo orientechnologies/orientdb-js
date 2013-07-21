@@ -153,93 +153,33 @@
         return '(' + argList + ')' + append;
     }
 
+    var REST = (function () {
 
-// function postData(path, data, headers){
-//             var deferred = q.defer();
-//             var payload = data || '{}';
-//             var body = '';
-
-            
-//             var options = {
-//                 'host': this.OPTS.host,
-//                 'port': this.OPTS.port,
-//                 'path': path,
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'Content-Length': Buffer.byteLength(payload, 'utf8')
-//                 },
-//                 'method': 'POST'
-//             };
-
-//             for (var h in headers) {
-//                 if (headers.hasOwnProperty(h)) {
-//                     options.headers[h] = headers[h];
-//                 }
-//             }
-
-//             var req = http.request(options, function(res) {
-//                 res.on('data', function (chunk) {
-//                     body += chunk;
-//                 });
-//                 res.on('end', function() {
-//                     deferred.resolve(JSON.parse(body));
-//                 });
-//             });
-
-//             req.on('error', function(e) {
-//               console.error('problem with request: ' + e.message);
-//               deferred.reject("Error: " + e.message);
-//             });
-
-//             // write data to request body
-//             req.write(payload);
-//             req.end();
-//             return deferred.promise;
-//         }
-
-// function basic_auth(user, password) {
-//           var tok = user + ':' + password;
-//           //var hash = global.btoa(tok);//new Buffer(tok).toString('base64');
-//           var hash = new Buffer(tok).toString('base64');
-//           return "Basic " + hash;
-//         }
-    
-//var injected;
-    var REST = (function (more) {
-
-        //var post = function(){};
         function REST(options, urlPath) {
             this.pathBase = '/command/';
             this.urlPath = urlPath || '/gremlin';
             this.OPTS = options;
             this.params = 'g'; 
-            // post = injected.post;
-            // console.log(injected.post.toString());
-
         }
-      
-        // function basic_auth(user, password) {
-        //   var tok = user + ':' + password;
-        //   //var hash = global.btoa(tok);//new Buffer(tok).toString('base64');
-        //   var hash = new Buffer(tok).toString('base64');
-        //   return "Basic " + hash;
-        // }
+        
+        /* Brower specific */
+        function basic_auth(user, password) {
+          var tok = user + ':' + password;
+          var hash = global.btoa(tok);
+          return "Basic " + hash;
+        }
 
-        // var post = function () {
-        //     return function(success, error) {
-        //         var baseUrl = this.pathBase + this.OPTS.graph,
-        //             data = this.params,           
-        //             auth = basic_auth(this.OPTS.user, this.OPTS.password),
-        //             headers = {'Authorization': auth};
-        //         //determine whether in the browser. http indicates in NodeJS
-        //         if(http){
-        //             return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
-        //         }
-        //         return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
-        //     }; 
-        // }
+        var post = function () {
+            return function(success, error) {
+                var baseUrl = this.pathBase + this.OPTS.graph,
+                    data = this.params,           
+                    auth = basic_auth(this.OPTS.user, this.OPTS.password),
+                    headers = {'Authorization': auth};
+                
+                return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
+            }; 
+        }
 
-//console.log(post());
 
         // function postData(path, data, headers){
         //     var deferred = q.defer();
@@ -439,7 +379,7 @@
             getProperty: qryMain('getProperty'),
 
             /*** http ***/
-            //then: post(),
+            then: post(),
 
         };
         return REST;
@@ -523,50 +463,13 @@
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 
         //Node.js
-        exports.inject = function(Q, HTTP, obj){
+        exports.inject = function(Q, HTTP, nodeFunc){
             q = Q;
             http = HTTP;
-        //     injected = {post: function () {
-        //     return function(success, error) {
-        //         var baseUrl = this.pathBase + this.OPTS.graph,
-        //             data = this.params,           
-        //             auth = basic_auth(this.OPTS.user, this.OPTS.password),
-        //             headers = {'Authorization': auth};
-        //         //determine whether in the browser. http indicates in NodeJS
-        //         if(http){
-        //             return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
-        //         }
-        //         return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
-        //     }; 
-        // }}
+            REST.prototype.then = nodeFunc['post'];
 
             delete exports.inject;
             exports.connect = orientdb;
-
-            //console.log(injected);
-            
-
-            REST.prototype.aFunction = function(){ 
-                return "hello Again";
-                };
-
-                REST.prototype.then = obj['post'];
-            //     function(success, error) {
-            //     var baseUrl = this.pathBase + this.OPTS.graph,
-            //         data = this.params,           
-            //         auth = basic_auth(this.OPTS.user, this.OPTS.password),
-            //         headers = {'Authorization': auth};
-            //     //determine whether in the browser. http indicates in NodeJS
-            //     if(http){
-            //         return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
-            //     }
-            //     return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
-            // }; 
-        
-            
-
-            var r = new REST({test:"Testing"});
-            //console.log(r.aFunction());
             return exports;
         };
     }
