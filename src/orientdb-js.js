@@ -153,76 +153,136 @@
         return '(' + argList + ')' + append;
     }
 
-    var REST = (function () {
+
+// function postData(path, data, headers){
+//             var deferred = q.defer();
+//             var payload = data || '{}';
+//             var body = '';
+
+            
+//             var options = {
+//                 'host': this.OPTS.host,
+//                 'port': this.OPTS.port,
+//                 'path': path,
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                     'Content-Length': Buffer.byteLength(payload, 'utf8')
+//                 },
+//                 'method': 'POST'
+//             };
+
+//             for (var h in headers) {
+//                 if (headers.hasOwnProperty(h)) {
+//                     options.headers[h] = headers[h];
+//                 }
+//             }
+
+//             var req = http.request(options, function(res) {
+//                 res.on('data', function (chunk) {
+//                     body += chunk;
+//                 });
+//                 res.on('end', function() {
+//                     deferred.resolve(JSON.parse(body));
+//                 });
+//             });
+
+//             req.on('error', function(e) {
+//               console.error('problem with request: ' + e.message);
+//               deferred.reject("Error: " + e.message);
+//             });
+
+//             // write data to request body
+//             req.write(payload);
+//             req.end();
+//             return deferred.promise;
+//         }
+
+// function basic_auth(user, password) {
+//           var tok = user + ':' + password;
+//           //var hash = global.btoa(tok);//new Buffer(tok).toString('base64');
+//           var hash = new Buffer(tok).toString('base64');
+//           return "Basic " + hash;
+//         }
+    
+//var injected;
+    var REST = (function (more) {
+
+        //var post = function(){};
         function REST(options, urlPath) {
             this.pathBase = '/command/';
             this.urlPath = urlPath || '/gremlin';
             this.OPTS = options;
-            this.params = 'g';    
+            this.params = 'g'; 
+            // post = injected.post;
+            // console.log(injected.post.toString());
+
         }
       
-        function basic_auth(user, password) {
-          var tok = user + ':' + password;
-          var hash = global.btoa(tok);//new Buffer(tok).toString('base64');
-          return "Basic " + hash;
-        }
+        // function basic_auth(user, password) {
+        //   var tok = user + ':' + password;
+        //   //var hash = global.btoa(tok);//new Buffer(tok).toString('base64');
+        //   var hash = new Buffer(tok).toString('base64');
+        //   return "Basic " + hash;
+        // }
 
-        function post () {
-            return function(success, error) {
-                var baseUrl = this.pathBase + this.OPTS.graph,
-                    data = this.params,           
-                    auth = basic_auth(this.OPTS.user, this.OPTS.password),
-                    headers = {'Authorization': auth};
-                //As Q is a dependency, use it to determine if in the browser.
-                if(!global.Q){
-                    return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
-                }
-                return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
-            }; 
-        }
+        // var post = function () {
+        //     return function(success, error) {
+        //         var baseUrl = this.pathBase + this.OPTS.graph,
+        //             data = this.params,           
+        //             auth = basic_auth(this.OPTS.user, this.OPTS.password),
+        //             headers = {'Authorization': auth};
+        //         //determine whether in the browser. http indicates in NodeJS
+        //         if(http){
+        //             return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
+        //         }
+        //         return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
+        //     }; 
+        // }
 
-        function postData(path, data, headers){
-            var deferred = q.defer();
-            var payload = data || '{}';
-            var body = '';
+//console.log(post());
+
+        // function postData(path, data, headers){
+        //     var deferred = q.defer();
+        //     var payload = data || '{}';
+        //     var body = '';
 
             
-            var options = {
-                'host': this.OPTS.host,
-                'port': this.OPTS.port,
-                'path': path,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(payload, 'utf8')
-                },
-                'method': 'POST'
-            };
+        //     var options = {
+        //         'host': this.OPTS.host,
+        //         'port': this.OPTS.port,
+        //         'path': path,
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'Content-Length': Buffer.byteLength(payload, 'utf8')
+        //         },
+        //         'method': 'POST'
+        //     };
 
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
-            }
+        //     for (var h in headers) {
+        //         if (headers.hasOwnProperty(h)) {
+        //             options.headers[h] = headers[h];
+        //         }
+        //     }
 
-            var req = http.request(options, function(res) {
-                res.on('data', function (chunk) {
-                    body += chunk;
-                });
-                res.on('end', function() {
-                    deferred.resolve(JSON.parse(body));
-                });
-            });
+        //     var req = http.request(options, function(res) {
+        //         res.on('data', function (chunk) {
+        //             body += chunk;
+        //         });
+        //         res.on('end', function() {
+        //             deferred.resolve(JSON.parse(body));
+        //         });
+        //     });
 
-            req.on('error', function(e) {
-              console.error('problem with request: ' + e.message);
-              deferred.reject("Error: " + e.message);
-            });
+        //     req.on('error', function(e) {
+        //       console.error('problem with request: ' + e.message);
+        //       deferred.reject("Error: " + e.message);
+        //     });
 
-            // write data to request body
-            req.write(payload);
-            req.end();
-            return deferred.promise;
-        }
+        //     // write data to request body
+        //     req.write(payload);
+        //     req.end();
+        //     return deferred.promise;
+        // }
 
 
 /*******************************************/
@@ -379,7 +439,7 @@
             getProperty: qryMain('getProperty'),
 
             /*** http ***/
-            then: post(),
+            //then: post(),
 
         };
         return REST;
@@ -451,24 +511,68 @@
         return OrientDB;
     })();
 
+    var orientdb = function(options){
+        return new OrientDB(options);
+    }
+
     // some AMD build optimizers, like r.js, check for specific condition patterns like the following:
     if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {        
-        define(OrientDB);
+        define({ connect: orientdb });
     }
     // check for `exports` after `define` in case a build optimizer adds an `exports` object
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 
         //Node.js
-        exports.inject = function(Q, HTTP){
+        exports.inject = function(Q, HTTP, obj){
             q = Q;
             http = HTTP;
-            exports = module.exports = OrientDB;
+        //     injected = {post: function () {
+        //     return function(success, error) {
+        //         var baseUrl = this.pathBase + this.OPTS.graph,
+        //             data = this.params,           
+        //             auth = basic_auth(this.OPTS.user, this.OPTS.password),
+        //             headers = {'Authorization': auth};
+        //         //determine whether in the browser. http indicates in NodeJS
+        //         if(http){
+        //             return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
+        //         }
+        //         return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
+        //     }; 
+        // }}
+
+            delete exports.inject;
+            exports.connect = orientdb;
+
+            //console.log(injected);
+            
+
+            REST.prototype.aFunction = function(){ 
+                return "hello Again";
+                };
+
+                REST.prototype.then = obj['post'];
+            //     function(success, error) {
+            //     var baseUrl = this.pathBase + this.OPTS.graph,
+            //         data = this.params,           
+            //         auth = basic_auth(this.OPTS.user, this.OPTS.password),
+            //         headers = {'Authorization': auth};
+            //     //determine whether in the browser. http indicates in NodeJS
+            //     if(http){
+            //         return postData.call(this, baseUrl + this.urlPath, data, headers).then(success, error);
+            //     }
+            //     return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
+            // }; 
+        
+            
+
+            var r = new REST({test:"Testing"});
+            //console.log(r.aFunction());
             return exports;
         };
     }
     else {
         //browser
-        global.OrientDB = OrientDB;
+        global.OrientDB = { connect: orientdb };
     }
 
 })(this);
