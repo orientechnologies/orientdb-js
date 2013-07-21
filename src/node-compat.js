@@ -52,7 +52,7 @@
 		return deferred.promise;
 	};
 
-	var baseUrl = this.pathBase + this.OPTS.graph,
+	var baseUrl = this.pathBase + this.OPTS.database,
 		data = this.params,
 		auth = basic_auth(this.OPTS.user, this.OPTS.password),
 		headers = {'Authorization': auth};

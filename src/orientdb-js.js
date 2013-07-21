@@ -171,7 +171,7 @@
 
         var post = function () {
             return function(success, error) {
-                var baseUrl = this.pathBase + this.OPTS.graph,
+                var baseUrl = this.pathBase + this.OPTS.database,
                     data = this.params,           
                     auth = basic_auth(this.OPTS.user, this.OPTS.password),
                     headers = {'Authorization': auth};
@@ -347,7 +347,7 @@
             this.OPTS = {
                 'host': 'localhost',
                 'port': 2480,
-                'graph': 'tinkergraph',
+                'database': 'tinkergraph',
                 'idRegex': /^[0-9]+:[0-9]+$///,
                 //'user': 'root',
                 //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
