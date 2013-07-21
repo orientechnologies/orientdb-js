@@ -178,127 +178,81 @@
                 
                 return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
             }; 
-        }
+        };
 
-
-        // function postData(path, data, headers){
-        //     var deferred = q.defer();
-        //     var payload = data || '{}';
-        //     var body = '';
-
-            
-        //     var options = {
-        //         'host': this.OPTS.host,
-        //         'port': this.OPTS.port,
-        //         'path': path,
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Content-Length': Buffer.byteLength(payload, 'utf8')
-        //         },
-        //         'method': 'POST'
-        //     };
-
-        //     for (var h in headers) {
-        //         if (headers.hasOwnProperty(h)) {
-        //             options.headers[h] = headers[h];
-        //         }
-        //     }
-
-        //     var req = http.request(options, function(res) {
-        //         res.on('data', function (chunk) {
-        //             body += chunk;
-        //         });
-        //         res.on('end', function() {
-        //             deferred.resolve(JSON.parse(body));
-        //         });
-        //     });
-
-        //     req.on('error', function(e) {
-        //       console.error('problem with request: ' + e.message);
-        //       deferred.reject("Error: " + e.message);
-        //     });
-
-        //     // write data to request body
-        //     req.write(payload);
-        //     req.end();
-        //     return deferred.promise;
-        // }
-
-
-/*******************************************/
-    function _encode(data) {
-        var result = "";
-        if (typeof data === "string") {
-            result = data;
-        } else {
-            var e = encodeURIComponent;
-            for (var k in data) {
-                if (data.hasOwnProperty(k)) {
-                    result += '&' + e(k) + '=' + e(data[k]);
+        function _encode(data) {
+            var result = "";
+            if (typeof data === "string") {
+                result = data;
+            } else {
+                var e = encodeURIComponent;
+                for (var k in data) {
+                    if (data.hasOwnProperty(k)) {
+                        result += '&' + e(k) + '=' + e(data[k]);
+                    }
                 }
             }
+            return result;
         }
-        return result;
-    }
 
-    function new_xhr() {
-        var xhr;
-        if (window.XMLHttpRequest) {
-            xhr = new XMLHttpRequest();
-        } else if (typeof XDomainRequest != "undefined") {
-            // Otherwise, check if XDomainRequest.
-            // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
-            xhr = new XDomainRequest();
-      } else if (window.ActiveXObject) {
-            try {
-                xhr = new ActiveXObject("Msxml2.XMLHTTP");
-            } catch (e) {
-                xhr = new ActiveXObject("Microsoft.XMLHTTP");
+        function new_xhr() {
+            var xhr;
+            if (window.XMLHttpRequest) {
+                xhr = new XMLHttpRequest();
+            } else if (typeof XDomainRequest != "undefined") {
+                // Otherwise, check if XDomainRequest.
+                // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+                xhr = new XDomainRequest();
+          } else if (window.ActiveXObject) {
+                try {
+                    xhr = new ActiveXObject("Msxml2.XMLHTTP");
+                } catch (e) {
+                    xhr = new ActiveXObject("Microsoft.XMLHTTP");
+                }
             }
+            return xhr;
         }
-        return xhr;
-    }
 
-    function ajax(method, url, data, headers) {
-        var deferred = q.defer();
-        var xhr, payload, o = {};
-        data = data || {};
-        headers = headers || {};
-        
-        try {
-            xhr = new_xhr();
-        } catch (e) {
-            deferred.reject(-1);
+        function ajax(method, url, data, headers) {
+            var deferred = q.defer();
+            var xhr, payload, o = {};
+            data = data || {};
+            headers = headers || {};
+            
+            try {
+                xhr = new_xhr();
+            } catch (e) {
+                deferred.reject(-1);
+                return deferred.promise;
+            }
+
+            payload = _encode(data);
+            if (method === 'GET' && payload) {
+                url += payload;
+                payload = null;
+            }
+
+            xhr.open(method, url, true);
+            for (var h in headers) {
+                if (headers.hasOwnProperty(h)) {
+                    xhr.setRequestHeader(h, headers[h]);
+                }
+            }
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        deferred.resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        deferred.reject(xhr);
+                    }
+                }
+            };
+
+            xhr.send(payload);
             return deferred.promise;
         }
 
-        payload = _encode(data);
-        if (method === 'GET' && payload) {
-            url += payload;
-            payload = null;
-        }
-
-        xhr.open(method, url, true);
-        for (var h in headers) {
-            if (headers.hasOwnProperty(h)) {
-                xhr.setRequestHeader(h, headers[h]);
-            }
-        }
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    deferred.resolve(JSON.parse(xhr.responseText));
-                } else {
-                    deferred.reject(xhr);
-                }
-            }
-        };
-
-        xhr.send(payload);
-        return deferred.promise;
-    }
-/*******************************************/
         REST.prototype = {
             _buildREST: function (qryString){
                 this.params = qryString;
@@ -453,7 +407,7 @@
 
     var orientdb = function(options){
         return new OrientDB(options);
-    }
+    };
 
     // some AMD build optimizers, like r.js, check for specific condition patterns like the following:
     if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {        
@@ -466,7 +420,7 @@
         exports.inject = function(Q, HTTP, nodeFunc){
             q = Q;
             http = HTTP;
-            REST.prototype.then = nodeFunc['post'];
+            REST.prototype.then = nodeFunc.post;
 
             delete exports.inject;
             exports.connect = orientdb;
