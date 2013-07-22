@@ -394,14 +394,6 @@
             }
         };
 
-        OrientDB.prototype.setAuth = function (user, password){
-            this.setOptions({ 'user': user, 'password': password });
-        };
-
-        OrientDB.prototype.begin = function (){
-            return new Trxn(this.OPTS);
-        };
-
         return OrientDB;
     })();
 
