@@ -9,10 +9,6 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    function isIdString(id) {
-        return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
-    }
-
     function isString(o) {
         return toString.call(o) === '[object String]';
     }
@@ -40,7 +36,7 @@
                 args = isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            restCmd = createNew ? new REST(options) : self._buildREST(self.params);
+            restCmd = createNew ? new REST(options, '/command/') : self._buildREST(self.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -66,7 +62,7 @@
             return val.toString();
         }
         //Cater for ids that are not numbers but pass parseFloat test
-        if(isIdString.call(this, val) || isNaN(parseFloat(val))) {
+        if(this.isId(val) || isNaN(parseFloat(val))) {
             return "'" + val + "'";
         }
         if(!isNaN(parseFloat(val))) {
@@ -127,8 +123,7 @@
             var restCmd,
                 args = arguments[0];
 
-            restCmd = new REST(options, '/sql');
-
+            restCmd = new REST(options, '/command/', '/sql');
             restCmd.params = args;
             return restCmd;
         };
@@ -153,34 +148,77 @@
         return '(' + argList + ')' + append;
     }
 
+    /* Brower specific functions. Node functions override these from index.js */
     var REST = (function () {
-
-        function REST(options, urlPath) {
-            this.pathBase = '/command/';
-            this.urlPath = urlPath || '/gremlin';
+        var self;
+        function REST(options, cmdUrl, cmdTypeUrl) {
+            self = this;
+            this.cmdUrl = cmdUrl || '/command/';
+            this.cmdTypeUrl = cmdTypeUrl || '/gremlin';
             this.OPTS = options;
+            this.httpStr = options.ssl ? "https://" : "http://";
             this.params = 'g'; 
+
+            this.basic_auth = function (user, password) {
+              var tok = user + ':' + password;
+              var hash = global.btoa(tok);
+              return "Basic " + hash;
+            }
+
+            this.ajax = function (method, url, data, headers) {
+                var deferred = q.defer();
+                var xhr, payload, o = {};
+                var resp = '';
+                data = data || {};
+                headers = headers || {};
+                
+                try {
+                    xhr = new_xhr();
+                } catch (e) {
+                    deferred.reject(-1);
+                    return deferred.promise;
+                }
+
+                payload = encode(data);
+                if (method === 'GET' && payload) {
+                    url += payload;
+                    payload = null;
+                }
+
+                xhr.open(method, url, true);
+                for (var h in headers) {
+                    if (headers.hasOwnProperty(h)) {
+                        xhr.setRequestHeader(h, headers[h]);
+                    }
+                }
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resp = !!xhr.responseText.length ? JSON.parse(xhr.responseText) : {status: xhr.status, statusText: xhr.statusText};
+                            deferred.resolve(resp);
+                        } else {
+                            deferred.reject(xhr);
+                        }
+                    }
+                };
+
+                xhr.send(payload);
+                return deferred.promise;
+            }
         }
         
-        /* Brower specific */
-        function basic_auth(user, password) {
-          var tok = user + ':' + password;
-          var hash = global.btoa(tok);
-          return "Basic " + hash;
-        }
-
         var post = function () {
             return function(success, error) {
-                var baseUrl = this.pathBase + this.OPTS.database,
-                    data = this.params,           
-                    auth = basic_auth(this.OPTS.user, this.OPTS.password),
-                    headers = {'Authorization': auth};
+                var baseUrl = this.cmdUrl + this.OPTS.database,
+                    data = this.params, headers;
                 
-                return ajax.call(this, 'POST', baseUrl + this.urlPath, data, headers).then(success, error);
+                return this.ajax.call(this, 'POST', baseUrl + this.cmdTypeUrl, data, headers)
+                    .then(success, error);
             }; 
         };
 
-        function _encode(data) {
+        function encode(data) {
             var result = "";
             if (typeof data === "string") {
                 result = data;
@@ -211,46 +249,6 @@
                 }
             }
             return xhr;
-        }
-
-        function ajax(method, url, data, headers) {
-            var deferred = q.defer();
-            var xhr, payload, o = {};
-            data = data || {};
-            headers = headers || {};
-            
-            try {
-                xhr = new_xhr();
-            } catch (e) {
-                deferred.reject(-1);
-                return deferred.promise;
-            }
-
-            payload = _encode(data);
-            if (method === 'GET' && payload) {
-                url += payload;
-                payload = null;
-            }
-
-            xhr.open(method, url, true);
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    xhr.setRequestHeader(h, headers[h]);
-                }
-            }
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        deferred.resolve(JSON.parse(xhr.responseText));
-                    } else {
-                        deferred.reject(xhr);
-                    }
-                }
-            };
-
-            xhr.send(payload);
-            return deferred.promise;
         }
 
         REST.prototype = {
@@ -335,20 +333,29 @@
             /*** http ***/
             then: post(),
 
+            authenticate: function() {
+                var url = self.httpStr + self.OPTS.host + ":" + self.OPTS.port + self.cmdUrl + self.OPTS.database,
+                    auth = self.basic_auth(self.OPTS.user, self.OPTS.password),
+                    headers = {'Authorization': auth};
+                return self.ajax('GET', url, null, headers);
+            },
         };
+
         return REST;
     })();
 
     var OrientDB = (function(){
             
         function OrientDB(options){
+            var self = this;
+            this.idRegex = /^[0-9]+:[0-9]+$/;
 
             //default options
             this.OPTS = {
+                'ssl': false,
                 'host': 'localhost',
                 'port': 2480,
                 'database': 'tinkergraph',
-                'idRegex': /^[0-9]+:[0-9]+$///,
                 //'user': 'root',
                 //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
             };
@@ -382,6 +389,21 @@
             this.shutdown =  qryMain('shutdown');
             this.getFeatures = qryMain('getFeatures');
 
+            this.connect = function(){
+                var rest = new REST(this.OPTS, '/connect/');
+                return q.fcall(rest.authenticate)
+                    .then(function(resp){
+                        if(resp.status === 204){
+                            return self;
+                        } else {
+                            throw {message:"Problem establishing connect to database.", response: resp};
+                        }                        
+                    });
+            };
+
+            this.isId = function (id) {
+                return !!this.idRegex && isString(id) && this.idRegex.test(id);
+            };
         }
 
         OrientDB.prototype.setOptions = function (options){
@@ -398,7 +420,8 @@
     })();
 
     var orientdb = function(options){
-        return new OrientDB(options);
+        var db = new OrientDB(options);
+        return db.connect();
     };
 
     // some AMD build optimizers, like r.js, check for specific condition patterns like the following:
