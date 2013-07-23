@@ -159,12 +159,6 @@
             this.httpStr = options.ssl ? "https://" : "http://";
             this.params = 'g'; 
 
-            this.basic_auth = function (user, password) {
-              var tok = user + ':' + password;
-              var hash = global.btoa(tok);
-              return "Basic " + hash;
-            }
-
             this.ajax = function (method, url, data, headers) {
                 var deferred = q.defer();
                 var xhr, payload, o = {};
@@ -208,16 +202,6 @@
             }
         }
         
-        var post = function () {
-            return function(success, error) {
-                var baseUrl = this.cmdUrl + this.OPTS.database,
-                    data = this.params, headers;
-                
-                return this.ajax.call(this, 'POST', baseUrl + this.cmdTypeUrl, data, headers)
-                    .then(success, error);
-            }; 
-        };
-
         function encode(data) {
             var result = "";
             if (typeof data === "string") {
@@ -249,6 +233,34 @@
                 }
             }
             return xhr;
+        }
+
+        function basic_auth (user, password) {
+            var tok = user + ':' + password;
+            var hash = global.btoa(tok);
+            return "Basic " + hash;
+        };
+        
+
+        var post = function () {
+            return function(success, error) {
+                var baseUrl = this.cmdUrl + this.OPTS.database,
+                    data = this.params, headers;
+                
+                return this.ajax.call(this, 'POST', baseUrl + this.cmdTypeUrl, data, headers)
+                    .then(success, error);
+            }; 
+        };
+
+        var auth = function() {
+            return function() {
+                return q.fcall(function() {
+                    var url = self.httpStr + self.OPTS.host + ":" + self.OPTS.port + self.cmdUrl + self.OPTS.database,
+                    auth = basic_auth(self.OPTS.user, self.OPTS.password),
+                    headers = {'Authorization': auth};
+                    return self.ajax('GET', url, null, headers);
+                });
+            }
         }
 
         REST.prototype = {
@@ -330,17 +342,11 @@
             setProperty: qryMain('setProperty'),
             getProperty: qryMain('getProperty'),
 
-            /*** http ***/
+            /*** overridden in NodeJS ***/
             then: post(),
-
-            authenticate: function() {
-                var url = self.httpStr + self.OPTS.host + ":" + self.OPTS.port + self.cmdUrl + self.OPTS.database,
-                    auth = self.basic_auth(self.OPTS.user, self.OPTS.password),
-                    headers = {'Authorization': auth};
-                return self.ajax('GET', url, null, headers);
-            },
+            authenticate: auth(),
         };
-
+        
         return REST;
     })();
 
@@ -391,12 +397,12 @@
 
             this.connect = function(){
                 var rest = new REST(this.OPTS, '/connect/');
-                return q.fcall(rest.authenticate)
+                return rest.authenticate()
                     .then(function(resp){
                         if(resp.status === 204){
                             return self;
                         } else {
-                            throw {message:"Problem establishing connect to database.", response: resp};
+                            throw { message:"Problem establishing connect to database.", response: resp};
                         }                        
                     });
             };
@@ -415,7 +421,6 @@
                 }
             }
         };
-
         return OrientDB;
     })();
 
@@ -430,7 +435,8 @@
     }
     // check for `exports` after `define` in case a build optimizer adds an `exports` object
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-        exports.POST = REST.prototype;
+        //q = require('q');
+        exports.REST = REST.prototype;
         exports.connect = orientdb;
     }
     else {
