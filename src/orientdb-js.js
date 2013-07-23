@@ -29,7 +29,7 @@
         return toString.call(o) === '[object Array]';
     }
 
-    function qryMain(method, options, createNew){
+    function qryMain(method, options, createNew, cookie){
         return function(){
             var self = this,
                 restCmd,
@@ -153,6 +153,9 @@
         var self;
         function REST(options, cmdUrl, cmdTypeUrl) {
             self = this;
+            if('sid' in options){
+                this.sid = options.sid;
+            }
             this.cmdUrl = cmdUrl || '/command/';
             this.cmdTypeUrl = cmdTypeUrl || '/gremlin';
             this.OPTS = options;
@@ -199,7 +202,7 @@
 
                 xhr.send(payload);
                 return deferred.promise;
-            }
+            };
         }
         
         function encode(data) {
@@ -239,7 +242,7 @@
             var tok = user + ':' + password;
             var hash = global.btoa(tok);
             return "Basic " + hash;
-        };
+        }
         
 
         var post = function () {
@@ -260,8 +263,8 @@
                     headers = {'Authorization': auth};
                     return self.ajax('GET', url, null, headers);
                 });
-            }
-        }
+            };
+        };
 
         REST.prototype = {
             _buildREST: function (qryString){
@@ -355,7 +358,7 @@
         function OrientDB(options){
             var self = this;
             this.idRegex = /^[0-9]+:[0-9]+$/;
-
+            this.sid = '';
             //default options
             this.OPTS = {
                 'ssl': false,
@@ -370,36 +373,38 @@
                 this.setOptions(options);
             }
 
-            this.V = qryMain('V', this.OPTS, true);
             this._ = qryMain('_', this.OPTS, true);
             this.E = qryMain('E', this.OPTS, true);
             this.V =  qryMain('V', this.OPTS, true);
 
-            this.sql = qrySql(this.OPTS);
+            this.sql = qrySql(this.OPTS, true);
 
             //Methods
             this.e = qryMain('e', this.OPTS, true);
             this.idx = qryMain('idx', this.OPTS, true);
-            this.v = qryMain('v', this.OPTS, true);
+            this.v = qryMain('v', this.OPTS, true, this.sid);
 
             //Indexing
-            this.createIndex = qryMain('createIndex');
-            this.createKeyIndex = qryMain('createKeyIndex');
-            this.getIndices =  qryMain('getIndices');
-            this.getIndexedKeys =  qryMain('getIndexedKeys');
-            this.getIndex =  qryMain('getIndex');
-            this.dropIndex = qryMain('dropIndex');
-            this.dropKeyIndex = qryMain('dropKeyIndex');
+            this.createIndex = qryMain('createIndex', this.OPTS, true);
+            this.createKeyIndex = qryMain('createKeyIndex', this.OPTS, true);
+            this.getIndices =  qryMain('getIndices', this.OPTS, true);
+            this.getIndexedKeys =  qryMain('getIndexedKeys', this.OPTS, true);
+            this.getIndex =  qryMain('getIndex', this.OPTS, true);
+            this.dropIndex = qryMain('dropIndex', this.OPTS, true);
+            this.dropKeyIndex = qryMain('dropKeyIndex', this.OPTS, true);
 
-            this.clear =  qryMain('clear');
-            this.shutdown =  qryMain('shutdown');
-            this.getFeatures = qryMain('getFeatures');
+            this.clear =  qryMain('clear', this.OPTS, true);
+            this.shutdown =  qryMain('shutdown', this.OPTS, true);
+            this.getFeatures = qryMain('getFeatures', this.OPTS, true);
 
             this.connect = function(){
                 var rest = new REST(this.OPTS, '/connect/');
                 return rest.authenticate()
                     .then(function(resp){
                         if(resp.status === 204){
+                            if('sid' in resp){
+                                self.setOptions({'sid': resp.sid});
+                            }
                             return self;
                         } else {
                             throw { message:"Problem establishing connect to database.", response: resp};
