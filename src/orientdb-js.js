@@ -1,7 +1,6 @@
 ;(function(global) {
     "use strict";
     var q = global.Q || {};
-    var http;
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push;
@@ -440,7 +439,6 @@
     }
     // check for `exports` after `define` in case a build optimizer adds an `exports` object
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-        //q = require('q');
         exports.REST = REST.prototype;
         exports.connect = orientdb;
     }
