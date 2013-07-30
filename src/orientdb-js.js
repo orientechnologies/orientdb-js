@@ -8,6 +8,10 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
+    function isRegexId(id) {
+        return !!this.idRegex && isString(id) && this.idRegex.test(id);
+    };
+
     function isString(o) {
         return toString.call(o) === '[object String]';
     }
@@ -61,7 +65,7 @@
             return val.toString();
         }
         //Cater for ids that are not numbers but pass parseFloat test
-        if(this.isId(val) || isNaN(parseFloat(val))) {
+        if(isRegexId.call(this, val) || isNaN(parseFloat(val))) {
             return "'" + val + "'";
         }
         if(!isNaN(parseFloat(val))) {
@@ -409,10 +413,6 @@
                             throw { message:"Problem establishing connect to database.", response: resp};
                         }                        
                     });
-            };
-
-            this.isId = function (id) {
-                return !!this.idRegex && isString(id) && this.idRegex.test(id);
             };
         }
 
