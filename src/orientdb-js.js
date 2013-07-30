@@ -32,14 +32,14 @@
         return toString.call(o) === '[object Array]';
     }
 
-    function qryMain(method, options, createNew){
+    function qryMain(method, createNew){
         return function(){
             var self = this,
                 restCmd,
                 args = isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            restCmd = createNew ? new REST(options, '/command/') : self._buildREST(self.params);
+            restCmd = createNew ? new REST(self.OPTS, '/command/') : self._buildREST(self.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -121,12 +121,12 @@
         };
     }
 
-    function qrySql(options){
+    function qrySql(){
         return function(){
             var restCmd,
                 args = arguments[0];
 
-            restCmd = new REST(options, '/command/', '/sql');
+            restCmd = new REST(this.OPTS, '/command/', '/sql');
             restCmd.params = args;
             return restCmd;
         };
@@ -376,29 +376,29 @@
                 this.setOptions(options);
             }
 
-            this._ = qryMain('_', this.OPTS, true);
-            this.E = qryMain('E', this.OPTS, true);
-            this.V =  qryMain('V', this.OPTS, true);
+            this._ = qryMain('_', true);
+            this.E = qryMain('E', true);
+            this.V =  qryMain('V', true);
 
-            this.sql = qrySql(this.OPTS, true);
+            this.sql = qrySql();
 
             //Methods
-            this.e = qryMain('e', this.OPTS, true);
-            this.idx = qryMain('idx', this.OPTS, true);
-            this.v = qryMain('v', this.OPTS, true);
+            this.e = qryMain('e', true);
+            this.idx = qryMain('idx', true);
+            this.v = qryMain('v', true);
 
             //Indexing
-            this.createIndex = qryMain('createIndex', this.OPTS, true);
-            this.createKeyIndex = qryMain('createKeyIndex', this.OPTS, true);
-            this.getIndices =  qryMain('getIndices', this.OPTS, true);
-            this.getIndexedKeys =  qryMain('getIndexedKeys', this.OPTS, true);
-            this.getIndex =  qryMain('getIndex', this.OPTS, true);
-            this.dropIndex = qryMain('dropIndex', this.OPTS, true);
-            this.dropKeyIndex = qryMain('dropKeyIndex', this.OPTS, true);
+            this.createIndex = qryMain('createIndex', true);
+            this.createKeyIndex = qryMain('createKeyIndex', true);
+            this.getIndices =  qryMain('getIndices', true);
+            this.getIndexedKeys =  qryMain('getIndexedKeys', true);
+            this.getIndex =  qryMain('getIndex', true);
+            this.dropIndex = qryMain('dropIndex', true);
+            this.dropKeyIndex = qryMain('dropKeyIndex', true);
 
-            this.clear =  qryMain('clear', this.OPTS, true);
-            this.shutdown =  qryMain('shutdown', this.OPTS, true);
-            this.getFeatures = qryMain('getFeatures', this.OPTS, true);
+            this.clear =  qryMain('clear', true);
+            this.shutdown =  qryMain('shutdown', true);
+            this.getFeatures = qryMain('getFeatures', true);
 
             this.connect = function(){
                 var rest = new REST(this.OPTS, '/connect/');
