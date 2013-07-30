@@ -32,7 +32,7 @@
         return toString.call(o) === '[object Array]';
     }
 
-    function qryMain(method, options, createNew, cookie){
+    function qryMain(method, options, createNew){
         return function(){
             var self = this,
                 restCmd,
@@ -385,7 +385,7 @@
             //Methods
             this.e = qryMain('e', this.OPTS, true);
             this.idx = qryMain('idx', this.OPTS, true);
-            this.v = qryMain('v', this.OPTS, true, this.sid);
+            this.v = qryMain('v', this.OPTS, true);
 
             //Indexing
             this.createIndex = qryMain('createIndex', this.OPTS, true);
