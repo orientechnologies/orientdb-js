@@ -18,15 +18,27 @@ module.exports = function(grunt){
 	      },
 	      src: ['src/*.js'],
 	    }
-	  }
+	  },
+	  // Configure a mochaTest task
+	    mochaTest: {
+	      test: {
+	        options: {
+	          reporter: 'spec',
+	          require: 'should',
+	          globals: 'g'
+	        },
+	        src: ['test/*.js']
+	      }
+	    }
 	});
 
 	// Load the plugin that provides the "uglify" task.
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	// Load the plugin that provides the "lint" task.
 	grunt.loadNpmTasks('grunt-contrib-jshint');
-
+	// Add the grunt-mocha-test tasks.
+	grunt.loadNpmTasks('grunt-mocha-test');
 	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'uglify']);
+	grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'uglify']);
 
 }

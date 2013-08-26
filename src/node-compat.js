@@ -32,6 +32,7 @@
 				body += chunk;
 			});
 			res.on('end', function() {
+				//console.log(body);
 				deferred.resolve(JSON.parse(body));
 			});
 		});

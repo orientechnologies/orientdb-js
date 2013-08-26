@@ -5,7 +5,7 @@
     var toString = Object.prototype.toString,
         push = Array.prototype.push;
 
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|incr|decr)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
     function isRegexId(id) {
@@ -290,6 +290,7 @@
             map: qryMain('map'),
             memoize: qryMain('memoize'),
             order: qryMain('order'),
+            orderMap: qryMain('orderMap'),
             out: qryMain('out'),
             outE: qryMain('outE'),
             outV: qryMain('outV'),
