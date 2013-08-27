@@ -42,6 +42,8 @@
                 var r = o[b];
                 if(isObject(r)){
                     return JSON.stringify(r);
+                } else if(isArray(r)){
+                    return r.join(',');
                 } else if(isString(r) || isNumber(r)){
                     return r;
                 };
