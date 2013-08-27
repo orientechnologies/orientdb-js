@@ -24,12 +24,82 @@
         return toString.call(o) === '[object Object]';
     }
 
+    function isNumber(o) {
+        return toString.call(o) === '[object Number]';
+    }
+
     function isClosure(val) {
         return isString(val) && closureRegex.test(val);   
     }
 
     function isArray(o) {
         return toString.call(o) === '[object Array]';
+    }
+
+    function supplant (s, o) {
+        return s.replace(/<([^<>]*)>/g,
+            function (a, b) {
+                var r = o[b];
+                if(isObject(r)){
+                    return JSON.stringify(r);
+                } else if(isString(r) || isNumber(r)){
+                    return r;
+                };
+                return a;
+            }
+        );
+    };
+
+    function qryCommand(template, config){
+        var vals = template.match(/<([^<>]*)>/g),
+            valLen = vals.length,
+            optionalVals = template.match(/\[([^\[\]]*)\]/g);
+        return function() {
+            var self = this,
+                valTemp,
+                argsLen = arguments.length,
+                i = 0,
+                j = 0,
+                args = {},
+                isDescriptor = false,
+                temp,
+                sqlCmd = qrySql();
+
+            if(argsLen == 1 && isObject(arguments[0])){
+                //check to see if the passed in Object is
+                //an actual argument or a descriptor i.e addVertex can take
+                //an object as the first parameter
+                for (j = 0; j < valLen; j++) {
+                    valTemp = vals[j].slice(1,-1);
+                    if((valTemp in arguments[0]) && arguments[0].hasOwnProperty(valTemp)){
+                        isDescriptor = true;
+                        break;
+                    }
+                };
+                
+                if(isDescriptor){
+                    args = arguments[0];
+                } else {
+                    //must have a config.parameters[0]
+                    args[config.parameters[0]] = arguments[0];                    
+                }
+
+            } else {
+                for (i = 0; i < argsLen; i++) {
+                    args[config.parameters[i]] = arguments[i];
+                };
+            }
+            temp = supplant(template, args);
+            if(config && 'defaults' in config){
+                temp = supplant(temp, config.defaults);
+            }
+            
+            for (var i = optionalVals.length - 1; i >= 0; i--) {
+                temp = temp.replace(optionalVals[i], "");
+            };
+            temp = temp.replace(/\[|\]/g, "");
+            return sqlCmd.call(self, temp);
+        }
     }
 
     function qryMain(method, createNew){
@@ -262,8 +332,8 @@
             return function() {
                 return q.fcall(function() {
                     var url = self.httpStr + self.OPTS.host + ":" + self.OPTS.port + self.cmdUrl + self.OPTS.database,
-                    auth = basic_auth(self.OPTS.user, self.OPTS.password),
-                    headers = {'Authorization': auth};
+                        authen = basic_auth(self.OPTS.user, self.OPTS.password),
+                        headers = {'Authorization': authen};
                     return self.ajax('GET', url, null, headers);
                 });
             };
@@ -400,6 +470,17 @@
             this.clear =  qryMain('clear', true);
             this.shutdown =  qryMain('shutdown', true);
             this.getFeatures = qryMain('getFeatures', true);
+
+            //CUD
+            this.addVertex = qryCommand("CREATE VERTEX [<class>] [CLUSTER <cluster>] [CONTENT <content>]",
+                                        {  parameters:['content']
+                                        });
+
+
+            this.addEdge = qryCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]"
+                                    ,{  defaults:{ class: 'E' },
+                                        parameters:['from','to','content']
+                                    });
 
             this.connect = function(){
                 var rest = new REST(this.OPTS, '/connect/');

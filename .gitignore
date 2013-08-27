@@ -4,3 +4,9 @@ orientTestServer.js
 node_modules
 
 .DS_Store
+
+OrientDB_Proxy_Server.js
+
+index.html
+
+q.js
