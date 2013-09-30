@@ -5,8 +5,27 @@
     var toString = Object.prototype.toString,
         push = Array.prototype.push;
 
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|incr|decr)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|incr|decr|in|notin)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
+
+    var T = { 'gt': 'T.gt',
+              'gte': 'T.gte',
+              'eq': 'T.eq',
+              'neq': 'T.neq',
+              'lte': 'T.lte',
+              'lt': 'T.lt',
+              'decr': 'T.decr',
+              'incr': 'T.incr',
+              'notin': 'T.notin',
+              'in': 'T.in'
+            };
+
+    var Contains = { 'IN': 'Contains.IN',
+              'NOT_IN': 'Contains.NOT_IN'
+            };
+
+    var Vertex = { 'class': 'Vertex.class' };
+    var Edge = { 'class': 'Edge.class' };
 
     function isRegexId(id) {
         return !!this.idRegex && isString(id) && this.idRegex.test(id);
@@ -525,10 +544,19 @@
     else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
         exports.REST = REST.prototype;
         exports.connect = orientdb;
+        exports.T = T;
+        exports.Contains = Contains;
+        exports.Vertex = Vertex;
+        exports.Edge = Edge;
     }
     else {
         //browser
-        global.OrientDB = { connect: orientdb };
+        global.OrientDB = { connect: orientdb,
+                            T: T,
+                            Contains: Contains,
+                            Vertex: Vertex,
+                            Edge: Edge
+                        };
     }
 
 })(this);

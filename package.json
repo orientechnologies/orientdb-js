@@ -1,7 +1,7 @@
 {
   "name": "orientdb-js",
   "description": "Javascript driver for OrientDB with a Blueprints/Gremlin like syntax.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "keywords": [
     "database",
     "graph",
