@@ -29,7 +29,7 @@
 
     function isRegexId(id) {
         return !!this.idRegex && isString(id) && this.idRegex.test(id);
-    };
+    }
 
     function isString(o) {
         return toString.call(o) === '[object String]';
@@ -65,11 +65,11 @@
                     return r.join(',');
                 } else if(isString(r) || isNumber(r)){
                     return r;
-                };
+                }
                 return a;
             }
         );
-    };
+    }
 
     function createCommand(template, config){
         var vals = template.match(/<([^<>]*)>/g),
@@ -96,7 +96,7 @@
                         isDescriptor = true;
                         break;
                     }
-                };
+                }
                 
                 if(isDescriptor){
                     args = arguments[0];
@@ -108,19 +108,19 @@
             } else {
                 for (i = 0; i < argsLen; i++) {
                     args[config.parameters[i]] = arguments[i];
-                };
+                }
             }
             temp = supplant(template, args);
             if(config && 'defaults' in config){
                 temp = supplant(temp, config.defaults);
             }
             
-            for (var i = optionalVals.length - 1; i >= 0; i--) {
-                temp = temp.replace(optionalVals[i], "");
-            };
+            for (var m = optionalVals.length - 1; m >= 0; m--) {
+                temp = temp.replace(optionalVals[m], "");
+            }
             temp = temp.replace(/\[|\]/g, "");
             return sqlCmd.call(self, temp);
-        }
+        };
     }
 
     function qryMain(method, createNew){
@@ -498,8 +498,8 @@
                                         });
 
 
-            this.addEdge = createCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]"
-                                    ,{  defaults:{ class: 'E' },
+            this.addEdge = createCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]",
+                                    {  defaults:{ class: 'E' },
                                         parameters:['from','to','content']
                                     });
 

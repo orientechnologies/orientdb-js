@@ -39,6 +39,6 @@ module.exports = function(grunt){
 	// Add the grunt-mocha-test tasks.
 	grunt.loadNpmTasks('grunt-mocha-test');
 	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'uglify']);
+	grunt.registerTask('default', ['jshint', 'uglify']);
 
 }
