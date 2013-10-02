@@ -10,7 +10,7 @@
     "gremlin",
     "blueprints"
   ],
-  "homepage": "https://github.com/entrendipity/grex",
+  "homepage": "https://github.com/orientechnologies/orientdb-js",
   "authors": [
     "Frank Panetta <frank.panetta@entrendipity.com.au>"
   ],
@@ -21,7 +21,7 @@
   "dependencies": {
     "q": "0.9.x"
   },
-  "license": "MIT",
+  "license": "Apache2",
   "engines": {
     "node": ">=0.8.0"
   },
@@ -32,5 +32,14 @@
     "grunt-contrib-jshint": "~0.6.0",
     "grunt-contrib-uglify": "~0.2.2",
     "grunt-mocha-test": "~0.6.2"
+  },
+  "bugs": {
+    "url": "https://github.com/orientechnologies/orientdb-js/issues"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
