@@ -71,7 +71,7 @@
         );
     };
 
-    function qryCommand(template, config){
+    function createCommand(template, config){
         var vals = template.match(/<([^<>]*)>/g),
             valLen = vals.length,
             optionalVals = template.match(/\[([^\[\]]*)\]/g);
@@ -493,12 +493,12 @@
             this.getFeatures = qryMain('getFeatures', true);
 
             //CUD
-            this.addVertex = qryCommand("CREATE VERTEX [<class>] [CLUSTER <cluster>] [CONTENT <content>]",
+            this.addVertex = createCommand("CREATE VERTEX [<class>] [CLUSTER <cluster>] [CONTENT <content>]",
                                         {  parameters:['content']
                                         });
 
 
-            this.addEdge = qryCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]"
+            this.addEdge = createCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]"
                                     ,{  defaults:{ class: 'E' },
                                         parameters:['from','to','content']
                                     });
