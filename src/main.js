@@ -13,7 +13,7 @@ var orientdb = function(options, callback){
         if(callback) return callback(error);
         console.error(error);
     }
-
+    
     return connect;
 };
 

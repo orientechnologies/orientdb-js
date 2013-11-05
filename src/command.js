@@ -12,20 +12,20 @@ var isRegexId = Utils.isRegexId;
 var pathConnect = '/connect/';
 var pathCommand = '/command/';
 var pathGremlin = '/gremlin';
-var pathSql = '/sql'
+var pathSql = '/sql';
 
 
 function qryMain(method, reset){
     return function(){
         var self = this,
-            gremlin = reset ? new Gremlin(this, pathCommand) : self._buildGremlin(self.params),
+            command = reset ? new Command(this, pathCommand) : self._buildCommand(self.params),
             args = '',
             appendArg = '';
 
         //cater for select array parameters
         if(method == 'select'){
             args = arguments;
-            gremlin.params += '.' + method + buildArgs.call(self, args, true);
+            command.params += '.' + method + buildArgs.call(self, args, true);
         } else {
             args = isArray(arguments[0]) ? arguments[0] : arguments;
             //cater for idx param 2
@@ -37,10 +37,10 @@ function qryMain(method, reset){
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
-            gremlin.params += '.' + method + buildArgs.call(self, args);
+            command.params += '.' + method + buildArgs.call(self, args);
         }
-        gremlin.params += appendArg;
-        return gremlin;
+        command.params += appendArg;
+        return command;
     };
 }
 
@@ -49,7 +49,7 @@ function qrySql(){
         var restCmd,
             args = arguments[0];
 
-        restCmd = new Gremlin(this, pathCommand, pathSql);
+        restCmd = new Command(this, pathCommand, pathSql);
         restCmd.params = args;
         return restCmd;
     };
@@ -118,9 +118,9 @@ module.exports = {
 //Do not pass in method name, just string arg
 function qryIndex(){
     return function(arg) {
-        var gremlin = this._buildGremlin(this.params);
-        gremlin.params += '['+ arg.toString() + ']';
-        return gremlin;
+        var command = this._buildCommand(this.params);
+        command.params += '['+ arg.toString() + ']';
+        return command;
     };
 }
 
@@ -129,19 +129,19 @@ function qryIndex(){
 function qryPipes(method){
     return function() {
         var self = this,
-            gremlin = self._buildGremlin(this.params),
+            command = self._buildCommand(this.params),
             args = [],
             isArr = isArray(arguments[0]),
             argsLen = isArr ? arguments[0].length : arguments.length;
 
-        gremlin.params += "." + method + "(";
+        command.params += "." + method + "(";
         for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
-            gremlin.params += ",";
+            command.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
+            command.params += ",";
         }
-        gremlin.params = gremlin.params.slice(0, -1);
-        gremlin.params += ")";
-        return gremlin;
+        command.params = command.params.slice(0, -1);
+        command.params += ")";
+        return command;
     };
 }
 
@@ -149,7 +149,7 @@ function qryPipes(method){
 function qryCollection(method){
     return function() {
         var self = this,
-            gremlin = this._buildGremlin(this.params),
+            command = this._buildCommand(this.params),
             param = '';
 
         if(isArray(arguments[0])){
@@ -157,11 +157,11 @@ function qryCollection(method){
                 param += arguments[0][_i].params;
                 param += ",";
             }
-            gremlin.params += "." + method + "([" + param + "])";
+            command.params += "." + method + "([" + param + "])";
         } else {
-            gremlin.params += "." + method + buildArgs.call(self, arguments[0]);
+            command.params += "." + method + buildArgs.call(self, arguments[0]);
         }
-        return gremlin;
+        return command;
     };
 }
 
@@ -209,8 +209,8 @@ function parseArgs(val) {
     return val;
 }
 
-Gremlin = (function () {
-    function Gremlin(OrientDB, cmdUrl, cmdTypeUrl) {
+Command = (function () {
+    function Command(OrientDB, cmdUrl, cmdTypeUrl) {
         this.OrientDB = OrientDB;
         this.OPTS = OrientDB.OPTS;
         // if('sid' in options){
@@ -226,7 +226,7 @@ Gremlin = (function () {
         var tok = user + ':' + password;
         var hash = new Buffer(tok).toString('base64');
         return "Basic " + hash;
-    };
+    }
 
     function auth() {
         return function(){
@@ -261,7 +261,7 @@ Gremlin = (function () {
             });
             return deferred.promise;
         };
-    };
+    }
 
     function get() {
         return function(callback){
@@ -304,7 +304,7 @@ Gremlin = (function () {
         req.write(payload);
         req.end();
         return deferred.promise;
-    };
+    }
 
 
     var post = function() {
@@ -313,8 +313,8 @@ Gremlin = (function () {
         };
     };
 
-    Gremlin.prototype = {
-        _buildGremlin: function (qryString){
+    Command.prototype = {
+        _buildCommand: function (qryString){
             this.params = qryString;
             return this;
         },
@@ -403,5 +403,5 @@ Gremlin = (function () {
 
     };
 
-    return Gremlin;
+    return Command;
 })();

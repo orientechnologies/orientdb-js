@@ -1,5 +1,5 @@
 var q = require("q"),
-    command = require("./gremlin");
+    command = require("./command");
 
 var qryMain = command.qryMain;
 var qrySql = command.qrySql;
