@@ -3,6 +3,9 @@ var q = require("q"),
     Trxn = require("./transaction"),
     gremlin = require("./gremlin");
 
+var qryMain = gremlin.qryMain;
+var qrySql = gremlin.qrySql;
+var createCommand = gremlin.createCommand;
 
 module.exports = (function(){
     function OrientDB(options){
@@ -23,38 +26,38 @@ module.exports = (function(){
             this.setOptions(options);
         }
 
-        this.V = gremlin.qryMain('V', true);
-        this._ = gremlin.qryMain('_', true);
-        this.E = gremlin.qryMain('E', true);
-        this.V =  gremlin.qryMain('V', true);
+        this.V = qryMain('V', true);
+        this._ = qryMain('_', true);
+        this.E = qryMain('E', true);
+        this.V =  qryMain('V', true);
 
-        this.sql = gremlin.qrySql();
+        this.sql = qrySql();
         
         //Methods
-        this.e = gremlin.qryMain('e', true);
-        this.idx = gremlin.qryMain('idx', true);
-        this.v = gremlin.qryMain('v', true);
+        this.e = qryMain('e', true);
+        this.idx = qryMain('idx', true);
+        this.v = qryMain('v', true);
 
         //Indexing
-        this.createIndex = gremlin.qryMain('createIndex', true);
-        this.createKeyIndex = gremlin.qryMain('createKeyIndex', true);
-        this.getIndices =  gremlin.qryMain('getIndices', true);
-        this.getIndexedKeys =  gremlin.qryMain('getIndexedKeys', true);
-        this.getIndex =  gremlin.qryMain('getIndex', true);
-        this.dropIndex = gremlin.qryMain('dropIndex', true);
-        this.dropKeyIndex = gremlin.qryMain('dropKeyIndex', true);
+        this.createIndex = qryMain('createIndex', true);
+        this.createKeyIndex = qryMain('createKeyIndex', true);
+        this.getIndices =  qryMain('getIndices', true);
+        this.getIndexedKeys =  qryMain('getIndexedKeys', true);
+        this.getIndex =  qryMain('getIndex', true);
+        this.dropIndex = qryMain('dropIndex', true);
+        this.dropKeyIndex = qryMain('dropKeyIndex', true);
 
-        this.clear =  gremlin.qryMain('clear', true);
-        this.shutdown = gremlin.qryMain('shutdown', true);
-        this.getFeatures = gremlin.qryMain('getFeatures', true);
+        this.clear =  qryMain('clear', true);
+        this.shutdown = qryMain('shutdown', true);
+        this.getFeatures = qryMain('getFeatures', true);
 
         //CUD
-        this.addVertex = gremlin.createCommand("CREATE VERTEX [<class>] [CLUSTER <cluster>] [CONTENT <content>]",
+        this.addVertex = createCommand("CREATE VERTEX [<class>] [CLUSTER <cluster>] [CONTENT <content>]",
                                     {  parameters:['content']
                                     });
 
 
-        this.addEdge = gremlin.createCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]",
+        this.addEdge = createCommand("CREATE EDGE <class> [CLUSTER <cluster>] FROM <from> TO <to> [CONTENT <content>]",
                                 {  defaults:{ class: 'E' },
                                     parameters:['from','to','content']
                                 });

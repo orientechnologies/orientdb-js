@@ -7,7 +7,7 @@ var isArray = Utils.isArray;
 var isClosure = Utils.isClosure;
 var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
-var merge = Utils.merge;
+//var merge = Utils.merge;
 
 
 var pathBase = '/graphs/';
@@ -106,10 +106,10 @@ function createCommand(template, config){
     };
 }
 
-module.exports = {  'qryMain': qryMain(),
-                    'qrySql': qrySql(),
-                    'createCommand': createCommand
-                }
+module.exports = { 'qryMain': qryMain,
+                    'qrySql': qrySql,
+                    'createCommand': createCommand 
+                };
 
 
 //[i] => index & [1..2] => range
@@ -215,6 +215,13 @@ Gremlin = (function () {
     function Gremlin(OrientDB) {
         this.OrientDB = OrientDB;
         this.OPTS = OrientDB.OPTS;
+        // if('sid' in options){
+        //     this.sid = options.sid;
+        // }
+        this.cmdUrl = '/command/';//cmdUrl || '/command/';
+        this.cmdTypeUrl = '/gremlin';//cmdTypeUrl || '/gremlin';
+        this.httpStr = "http://";//options.ssl ? "https://" : "http://";
+
         this.params = 'g';
     }
 
@@ -341,8 +348,8 @@ Gremlin = (function () {
 
 
     var post = function() {
-        return function(success, error){
-            return postData.call(this).then(success, error);
+        return function(callback){
+            return postData.call(this).then().nodeify(callback);
         };
     };
 

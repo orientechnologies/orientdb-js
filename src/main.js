@@ -8,7 +8,7 @@ var orientdb = function(options, callback){
             options = undefined;
         }
         var db = new OrientDB(options);
-        console.log(db);
+        //console.error(db);
         connect = db.connect().then().nodeify(callback);
     } catch(error) {
         //return callback(error);
