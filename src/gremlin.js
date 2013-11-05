@@ -2,22 +2,23 @@ var http = require("http");
 var q = require("q");
 
 var Utils = require("./utils");
+var supplant = Utils.supplant;
 var isObject = Utils.isObject;
 var isArray = Utils.isArray;
 var isClosure = Utils.isClosure;
 var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
-//var merge = Utils.merge;
 
-
-var pathBase = '/graphs/';
-var gremlinExt = '/tp/gremlin?script=';
+var pathConnect = '/connect/';
+var pathCommand = '/command/';
+var pathGremlin = '/gremlin';
+var pathSql = '/sql'
 
 
 function qryMain(method, reset){
     return function(){
         var self = this,
-            gremlin = reset ? new Gremlin(this) : self._buildGremlin(self.params),
+            gremlin = reset ? new Gremlin(this, pathCommand) : self._buildGremlin(self.params),
             args = '',
             appendArg = '';
 
@@ -48,7 +49,7 @@ function qrySql(){
         var restCmd,
             args = arguments[0];
 
-        restCmd = new REST(this.OPTS, '/command/', '/sql');
+        restCmd = new Gremlin(this, pathCommand, pathSql);
         restCmd.params = args;
         return restCmd;
     };
@@ -106,10 +107,11 @@ function createCommand(template, config){
     };
 }
 
-module.exports = { 'qryMain': qryMain,
-                    'qrySql': qrySql,
-                    'createCommand': createCommand 
-                };
+module.exports = { 
+                   'qryMain': qryMain,
+                   'qrySql': qrySql,
+                   'createCommand': createCommand 
+                 };
 
 
 //[i] => index & [1..2] => range
@@ -172,8 +174,6 @@ function buildArgs(array, retainArray) {
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(isClosure(array[_i])){
             append += array[_i];
-        } else if (isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
-            argList += array[_i].verbatim + ",";
         } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
             jsonString = JSON.stringify(array[_i]);
             jsonString = jsonString.replace('{', '[');
@@ -209,19 +209,16 @@ function parseArgs(val) {
     return val;
 }
 
-
-
 Gremlin = (function () {
-    function Gremlin(OrientDB) {
+    function Gremlin(OrientDB, cmdUrl, cmdTypeUrl) {
         this.OrientDB = OrientDB;
         this.OPTS = OrientDB.OPTS;
         // if('sid' in options){
         //     this.sid = options.sid;
         // }
-        this.cmdUrl = '/command/';//cmdUrl || '/command/';
-        this.cmdTypeUrl = '/gremlin';//cmdTypeUrl || '/gremlin';
+        this.cmdUrl = cmdUrl || '/command/';
+        this.cmdTypeUrl = cmdTypeUrl || '/gremlin';
         this.httpStr = "http://";//options.ssl ? "https://" : "http://";
-
         this.params = 'g';
     }
 
@@ -237,7 +234,7 @@ Gremlin = (function () {
             var options = {
                 'host': this.OPTS.host,
                 'port': this.OPTS.port,
-                'path': '/connect/' + this.OPTS.database,
+                'path': pathConnect + this.OPTS.database,
                 headers: {
                     'Authorization': basic_auth(this.OPTS.user, this.OPTS.password)
                 },
@@ -272,42 +269,6 @@ Gremlin = (function () {
         };
     }
 
-    // function getData() {
-    //     var self = this;
-    //     var deferred = q.defer();
-    //     var options = {
-    //         'host': this.OPTS.host,
-    //         'port': this.OPTS.port,
-    //         'path': pathBase + this.OPTS.graph + gremlinExt + encodeURIComponent(this.params) + '&rexster.showTypes=true',
-    //         headers: {
-    //             'Content-Type': 'application/x-www-form-urlencoded'
-    //         },
-    //         'method': 'GET'
-    //     };
-
-    //     http.get(options, function(res) {
-    //         var body = '';
-    //         var typeMap = {};
-    //         var tempObj = {};
-    //         var returnObj = {};
-    //         var resultObj = { results: [], typeMap: {} };
-    //         var n;
-    //         res.on('data', function(results) {
-    //             body += results;
-    //         });
-
-    //         res.on('end', function() {
-    //             deferred.resolve(transformResults.call(self.OrientDB, JSON.parse(body).results));
-    //         });
-
-    //     }).on('error', function(e) {
-    //         deferred.reject(e);
-    //     });
-
-    //     return deferred.promise;
-    // }
-
-
     function postData(){
         var deferred = q.defer();
         var payload = this.params || '{}';
@@ -330,7 +291,6 @@ Gremlin = (function () {
                 body += chunk;
             });
             res.on('end', function() {
-                //console.log(body);
                 deferred.resolve(JSON.parse(body));
             });
         });
@@ -352,124 +312,6 @@ Gremlin = (function () {
             return postData.call(this).then().nodeify(callback);
         };
     };
-
-    // function createTypeDef(obj){
-    //     var tempObj = {},
-    //         tempTypeObj = {},
-    //         tempResultObj = {},
-    //         tempTypeArr = [],
-    //         tempResultArr = [],
-    //         tempTypeArrLen = 0,
-    //         len = 0, rest = 1,
-    //         mergedObject = {},
-    //         returnObj = {typeDef:{}, result: {}};
-
-    //     if (isArray(obj)) {
-    //         len = obj.length;
-    //         for (var i = 0; i < len; i++) {
-    //             if (obj[i].type == 'map' || obj[i].type == 'list') {
-    //                 tempObj = createTypeDef(obj[i].value);
-    //                 tempTypeArr[i] = tempObj.typeDef;
-    //                 tempResultArr[i] = tempObj.result;
-    //             } else {
-    //                 tempTypeArr.push(obj[i].type);
-    //                 tempResultArr.push(obj[i].value);
-    //             }
-
-    //             if(i > 0) {
-    //                 //If type is map or list need to do deep compare
-    //                 //to ascertain whether equal or not
-    //                 //determine if the array has same types
-    //                 //then only show the type upto that index
-    //                 if (obj[i].type !== obj[i - 1].type) {
-    //                     rest = i + 1;
-    //                 }
-    //             }
-    //         }
-
-    //         if(rest > 1 && isObject(tempTypeArr[rest])){
-    //             //merge remaining objects
-    //             tempTypeArrLen = tempTypeArr.length;
-    //             mergedObject = tempTypeArr[rest - 1];
-    //             for(var j = rest;j < tempTypeArrLen; j++){
-    //                 mergedObject = merge(mergedObject, tempTypeArr[j]);
-    //             }
-    //             tempResultArr[rest - 1] = mergedObject;
-    //         }
-
-    //         tempTypeArr.length = rest;
-    //         returnObj.typeDef = tempTypeArr;
-    //         returnObj.result = tempResultArr;
-    //     } else {
-    //         for(var k in obj){
-    //             if (obj.hasOwnProperty(k)) {
-    //                 if(obj[k].type == 'map' || obj[k].type == 'list'){
-    //                     tempObj = createTypeDef(obj[k].value);
-    //                     tempTypeObj[k] = tempObj.typeDef;
-    //                     tempResultObj[k] = tempObj.result;
-    //                 } else {
-    //                     tempTypeObj[k] = obj[k].type;
-    //                     tempResultObj[k] = obj[k].value;
-    //                 }
-    //             }
-    //         }
-    //         returnObj.typeDef = tempTypeObj;
-    //         returnObj.result = tempResultObj;
-
-    //     }
-
-    //     return returnObj;
-    // }
-
-    // function transformResults(results){
-    //     var typeMap = {};
-    //     var typeObj, tempObj, returnObj;
-    //     var result = { success: true, results: [], typeMap: {} };
-    //     var n, l = results ? results.length : 0;
-
-    //     for(n = 0; n<l; n++){
-    //         tempObj = results[n];
-    //         if (isObject(tempObj)) {
-    //             returnObj = {};
-    //             typeObj = {};
-    //             for(var k in tempObj){
-    //                 if (tempObj.hasOwnProperty(k)) {
-    //                     if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
-    //                         if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
-    //                             if(!result.typeMapErr){
-    //                                 result.typeMapErr = {};
-    //                             }
-    //                             console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
-    //                             //only capture the first error
-    //                             if(!(k in result.typeMapErr)){
-    //                                 result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;
-    //                             }
-    //                         }
-    //                         if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
-    //                             //build recursive func to build object
-    //                             typeObj = createTypeDef(tempObj[k].value);
-    //                             typeMap[k] = typeObj.typeDef;
-    //                             returnObj[k] = typeObj.result;
-    //                         } else {
-    //                             typeMap[k] = tempObj[k].type;
-    //                             returnObj[k] = tempObj[k].value;
-    //                         }
-    //                     } else {
-    //                         returnObj[k] = tempObj[k];
-    //                     }
-    //                 }
-    //             }
-    //             result.results.push(returnObj);
-    //         } else {
-    //             result.results.push(tempObj);
-    //         }
-    //     }
-
-    //     result.typeMap = typeMap;
-    //     //This will preserve any locally defined TypeDefs
-    //     this.typeMap = merge(this.typeMap, typeMap);
-    //     return result;
-    // }
 
     Gremlin.prototype = {
         _buildGremlin: function (qryString){

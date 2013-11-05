@@ -1,11 +1,9 @@
 var q = require("q"),
-    merge = require("./utils").merge,
-    Trxn = require("./transaction"),
-    gremlin = require("./gremlin");
+    command = require("./gremlin");
 
-var qryMain = gremlin.qryMain;
-var qrySql = gremlin.qrySql;
-var createCommand = gremlin.createCommand;
+var qryMain = command.qryMain;
+var qrySql = command.qrySql;
+var createCommand = command.createCommand;
 
 module.exports = (function(){
     function OrientDB(options){
@@ -19,8 +17,6 @@ module.exports = (function(){
             //'user': 'root',
             //'password': 'EB478DB41FB3498FB96E6BDACA51C54DE20B281ED985B0DC03D5434D48BE28D1'
         };
-
-//        this.typeMap = {};
 
         if(options){
             this.setOptions(options);
@@ -78,10 +74,6 @@ module.exports = (function(){
             }
         }
     };
-
-    // OrientDB.prototype.begin = function (typeMap){
-    //     return new Trxn(this.OPTS, typeMap ? merge(typeMap, this.typeMap) : this.typeMap);
-    // };
 
     return OrientDB;
 })();

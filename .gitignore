@@ -10,3 +10,5 @@ OrientDB_Proxy_Server.js
 index.html
 
 q.js
+
+*.log

@@ -6,40 +6,35 @@ var toString = Object.prototype.toString;
 function isString(o) {
     return toString.call(o) === '[object String]';
 }
+function isObject(o) {
+        return toString.call(o) === '[object Object]';
+}
+function isArray(o) {
+        return toString.call(o) === '[object Array]';
+}
 
 module.exports = {
-    //obj1 over writes obj2
-    merge: function (obj1, obj2) {
-        for(var p in obj2) {
-            try  {
-                if(obj1.hasOwnProperty(p)) {
-                    obj1[p] = merge(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
-                }
-            } catch (e) {
-                obj1[p] = obj2[p];
-            }
-        }
-        return obj1;
-    },
 
     supplant: function (s, o) {
         return s.replace(/<([^<>]*)>/g,
             function (a, b) {
-                var r = o[b];
-                if(isObject(r)){
-                    return JSON.stringify(r);
-                } else if(isArray(r)){
-                    return r.join(',');
-                } else if(isString(r) || isNumber(r)){
-                    return r;
+                var r;
+                if(b in o) {
+                    r = o[b];    
+                    if(isObject(r)){
+                        return JSON.stringify(r);
+                    } else if(isArray(r)){
+                        return r.join(',');
+                    } else if(isString(r) || isNumber(r)){
+                        return r;
+                    }
                 }
                 return a;
             }
         );
     },
 
+    /* TODO: check if this is needed */
     isRegexId: function (id) {
         return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
     },
@@ -48,15 +43,11 @@ module.exports = {
         return isString(val) && graphRegex.test(val);
     },
 
-    isObject: function (o) {
-        return toString.call(o) === '[object Object]';
-    },
+    isObject: isObject,
 
     isClosure: function (val) {
         return isString(val) && closureRegex.test(val);
     },
 
-    isArray: function (o) {
-        return toString.call(o) === '[object Array]';
-    }
+    isArray: isArray
 };
