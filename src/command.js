@@ -398,7 +398,7 @@ Command = (function () {
         getProperty: qryMain('getProperty'),
 
         /*** http ***/
-        get: post(),
+        exec: post(),
         authenticate: auth()
 
     };
