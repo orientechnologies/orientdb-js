@@ -1,44 +1,61 @@
 module.exports = function(grunt){
-	// Project configuration.
-	grunt.initConfig({
-	  pkg: grunt.file.readJSON('package.json'),
-	  uglify: {
-	    options: {
-	      banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-	    },
-	    build: {
-	      src: 'src/<%= pkg.name %>.js',
-	      dest: 'build/<%= pkg.name %>.min.js'
-	    }
-	  },
-	  jshint: {
-	  	ignore_warning: {
-	      options: {
-	        '-W040': true,
-	      },
-	      src: ['src/*.js'],
-	    }
-	  },
-	  // Configure a mochaTest task
-	    mochaTest: {
-	      test: {
-	        options: {
-	          reporter: 'spec',
-	          require: 'should',
-	          globals: 'g'
-	        },
-	        src: ['test/*.js']
-	      }
-	    }
-	});
 
-	// Load the plugin that provides the "uglify" task.
-	grunt.loadNpmTasks('grunt-contrib-uglify');
-	// Load the plugin that provides the "lint" task.
-	grunt.loadNpmTasks('grunt-contrib-jshint');
-	// Add the grunt-mocha-test tasks.
-	grunt.loadNpmTasks('grunt-mocha-test');
-	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'uglify']);
+  // Project configuration.
+  grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+    uglify: {
+      options: {
+        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+      },
+      build: {
+        src: 'client/bundle.js',
+        dest: 'client/<%= pkg.name %>.min.js'
+      }
+    },
+    jshint: {
+      ignore_warning: {
+        options: {
+        '-W040': true,
+        },
+        src: ['src/*.js'],
+      }
+    },
+    // Configure a mochaTest task
+    mochaTest: {
+      test: {
+        options: {
+          timeout: 10000,
+            reporter: 'spec',
+            require: 'should',
+            globals: 'g'
+        },
+        src: ['test/*.js']
+      }
+    },
+    browserify: {
+      build: {
+        src: ['index.js'],
+        dest: 'client/bundle.js',
+        options: {
+          standalone: 'OrientDB',
+          debug: false        
+        }
+      }
+    }
+  });
 
-}
+  // Load the plugin that provides the "uglify" task.
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  // Load the plugin that provides the "lint" task.
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  // Load the plugin that provides the "browserify" task.
+  grunt.loadNpmTasks('grunt-browserify');
+  // Add the grunt-mocha-test tasks.
+  grunt.loadNpmTasks('grunt-mocha-test');
+
+  // Default task(s).
+  grunt.registerTask('default', ['jshint', 'mochaTest']);
+  grunt.registerTask('build', ['jshint', 'browserify:build', 'uglify']);
+  grunt.registerTask('test', ['mochaTest']);
+
+};

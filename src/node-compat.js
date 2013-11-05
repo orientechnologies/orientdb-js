@@ -7,7 +7,6 @@
 		var tok = user + ':' + password;
 		var hash = new Buffer(tok).toString('base64');
 		return "Basic " + hash;
-
 	};
 
 	var postData = function(){

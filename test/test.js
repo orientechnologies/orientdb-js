@@ -2,8 +2,8 @@ var orientdb = require('../index.js');
 
 beforeEach(function(done){
 	orientdb.connect({ 'database': 'testtinker', 
-					'user': 'root',
-					'password': 'FB87B02FCF8634EA5E46D4152211270E83D9416FF3CB9CCC95355364DE6F2C50'})
+					   'user': 'root',
+					   'password': 'FB87B02FCF8634EA5E46D4152211270E83D9416FF3CB9CCC95355364DE6F2C50'})
 		.then(function(result){
       		g = result;
   			done();	
